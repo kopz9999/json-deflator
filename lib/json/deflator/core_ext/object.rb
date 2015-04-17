@@ -1,0 +1,1 @@
+require 'json/deflator/core_ext/object/deflator'

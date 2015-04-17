@@ -20,8 +20,9 @@ describe Json::Deflator do
 
     elements = [ org1, org2, org6 ]
 
+    result = elements.deflate_json!
+    
     binding.pry
-
   end
 
   it 'solves circular references in objects' do
@@ -39,7 +40,9 @@ describe Json::Deflator do
 
     elements = [ org1, org2, org6 ]
 
-    #binding.pry
+    result = elements.deflate_json!
+    
+    binding.pry
 
     #expect(false).to eq(true)
   end
