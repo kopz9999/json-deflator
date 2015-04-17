@@ -45,11 +45,27 @@ module Json
       private
 
       def evaluate_deflate_static_reference!( opts = {} )
-
+        if self.is_a?(Array)
+          return ObjectManager.current_instance.settings.preserve_arrays? ? 
+            check_reference_for_static_reference!(opts) : 
+              self.deflate_static_reference!( opts )
+        else
+          return check_reference_for_static_reference!(opts)
+        end
       end
 
+      # Store this one and solve circular references
       def check_reference_for_static_reference!( opts = {} )
-
+        reference_id = opts[:object_id].nil? ? 
+          self.object_id : opts.delete(:object_id)
+        reference = ObjectManager.current_instance.reference_tracker[ reference_id ]
+        if reference.blank?
+          ObjectManager.current_instance.reference_tracker[ reference_id ] = 
+            ObjectManager.current_instance.next_identity
+          self.deflate_static_reference!( opts )
+        else
+          return { Json::Deflator::Identities::Reference => reference }
+        end        
       end
 
       def evaluate_deflate_jpath!( opts = {} )
@@ -63,15 +79,21 @@ module Json
 
       # Store this one and solve circular references
       def check_reference_for_jpath!(opts)
+        assert_recursion opts do | reference_id |
+          ObjectManager.current_instance.reference_tracker[ reference_id ] = 
+            ObjectManager.current_instance.current_path
+          self.deflate_jpath!( opts )
+        end
+      end
+
+      def assert_recursion( opts, &block )
         # The reference identifier may come from an object delegated to a hash
         # Remove it and continue the iteration
         reference_id = opts[:object_id].nil? ? 
           self.object_id : opts.delete(:object_id)
         reference = ObjectManager.current_instance.reference_tracker[ reference_id ]
         if reference.blank?
-          ObjectManager.current_instance.reference_tracker[ reference_id ] = 
-            ObjectManager.current_instance.current_path
-          self.deflate_jpath!( opts )
+          return block.call( reference_id )
         else
           return { Json::Deflator::Identities::Reference => reference }
         end
