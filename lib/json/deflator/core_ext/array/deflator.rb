@@ -14,7 +14,9 @@ class Array
   end
 
   def deflate_static_reference!( opts = {} )
-
+    self.map! do | obj |
+      obj.deflate_json!(opts)
+    end
   end
 
 end

@@ -14,7 +14,9 @@ class Hash
   end
 
   def deflate_static_reference!( opts = {} )
-
+    self.each do | k, v |
+      self[k] = v.deflate_json!(opts)
+    end
   end
 
 end

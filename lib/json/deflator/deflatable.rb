@@ -56,16 +56,19 @@ module Json
 
       # Store this one and solve circular references
       def check_reference_for_static_reference!( opts = {} )
-        reference_id = opts[:object_id].nil? ? 
-          self.object_id : opts.delete(:object_id)
-        reference = ObjectManager.current_instance.reference_tracker[ reference_id ]
-        if reference.blank?
-          ObjectManager.current_instance.reference_tracker[ reference_id ] = 
-            ObjectManager.current_instance.next_identity
-          self.deflate_static_reference!( opts )
-        else
-          return { Json::Deflator::Identities::Reference => reference }
-        end        
+        assert_recursion opts do | reference_id |
+          identity = ObjectManager.current_instance.next_identity
+          ObjectManager.current_instance.reference_tracker[ reference_id ] = identity
+          result = self.deflate_static_reference!( opts )
+          if self.is_a?(Array)
+            { Json::Deflator::Identities::Values => result, 
+              Json::Deflator::Identities::Identifier => identity }
+          else
+            # Opposite case is always a hash
+            result[ Json::Deflator::Identities::Identifier ] = identity
+            result
+          end
+        end    
       end
 
       def evaluate_deflate_jpath!( opts = {} )
@@ -86,14 +89,14 @@ module Json
         end
       end
 
-      def assert_recursion( opts, &block )
+      def assert_recursion( opts )
         # The reference identifier may come from an object delegated to a hash
         # Remove it and continue the iteration
         reference_id = opts[:object_id].nil? ? 
           self.object_id : opts.delete(:object_id)
         reference = ObjectManager.current_instance.reference_tracker[ reference_id ]
         if reference.blank?
-          return block.call( reference_id )
+          return yield( reference_id )
         else
           return { Json::Deflator::Identities::Reference => reference }
         end

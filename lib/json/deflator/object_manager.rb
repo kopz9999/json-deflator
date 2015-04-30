@@ -35,7 +35,9 @@ module Json
       attr_accessor :current_identity
 
       def initialize( opts = {} )
-        self.settings = opts[:settings] || Json::Deflator.default_settings
+        settings_value = opts[:settings]
+        self.settings = settings_value.nil? ? 
+          Json::Deflator.default_settings : Deflator::Settings.new(settings_value)
         self.reference_tracker = Hash.new
         case self.settings.mode
           when Json::Deflator::Modes::JPath

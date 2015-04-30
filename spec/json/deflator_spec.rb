@@ -20,6 +20,9 @@ describe Json::Deflator do
 
     elements = [ org1, org2, org6 ]
 
+    binding.pry
+    #result = elements
+    #  .deflate_json!(settings: { mode: :static_reference })
     result = elements.deflate_json!
     
     binding.pry

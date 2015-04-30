@@ -13,10 +13,14 @@ module Json
       alias :preserve_arrays? :preserve_arrays
 
       def initialize( opts = {} )
+        enable_filters_value = opts[:enable_filters]
+        preserve_arrays_value = opts[:preserve_arrays]
         self.root_symbol = opts[:root_symbol] || "$"
         self.mode = opts[:mode] || Json::Deflator::Modes::JPath
-        self.enable_filters = true
-        self.preserve_arrays = true
+        self.enable_filters = enable_filters_value.nil? ? 
+          true : enable_filters_value
+        self.preserve_arrays = preserve_arrays_value.nil? ?
+          true : preserve_arrays_value
       end
 
     end
