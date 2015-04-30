@@ -1,52 +1,45 @@
 require 'spec_helper'
 
 describe Json::Deflator do
-  it 'has a version number' do
-    expect(Json::Deflator::VERSION).not_to be nil
+
+  shared_context 'deflate validations' do
+    shared_examples 'valid deflate' do
+      specify 'has no exception' do
+        expect{
+          test_sample.deflate_json!(settings: test_settings)
+        }.not_to raise_error        
+      end
+    end
+    shared_examples 'reference validation' do
+    end
   end
 
-  it 'solves circular references in hashes' do
-    org1 = build_organization_hash name: "Test"
-    org2 = build_organization_hash name: "Test A"
-    org3 = build_organization_hash name: "Test B"
-    org4 = build_organization_hash name: "Test C"
-    org5 = build_organization_hash name: "Test D"
-    org6 = build_organization_hash name: "Test E"
+  describe 'hash sample' do
+    let(:test_sample) { array_with_circular_hashes_a }
 
-    add_hash_children org1, org2
-    add_hash_children org1, org3
-    add_hash_children org1, org4
-    add_hash_children org5, org6
-
-    elements = [ org1, org2, org6 ]
-
-    binding.pry
-    #result = elements
-    #  .deflate_json!(settings: { mode: :static_reference })
-    result = elements.deflate_json!
-    
-    binding.pry
+    include_context 'deflate validations'
+    context 'with j_path' do
+      let(:test_settings) { { mode: :j_path } }
+      it_behaves_like 'valid deflate'
+    end
+    context 'with static_reference' do
+      let(:test_settings) { { mode: :static_reference } }
+      it_behaves_like 'valid deflate'
+    end
   end
 
-  it 'solves circular references in objects' do
-    org1 = Organization.new "Test"
-    org2 = Organization.new "Test A"
-    org3 = Organization.new "Test B"
-    org4 = Organization.new "Test C"
-    org5 = Organization.new "Test D"
-    org6 = Organization.new "Test E"
+  describe 'object sample' do
+    let(:test_sample) { array_with_circular_objects_a }
 
-    org1.add_child org2
-    org1.add_child org3
-    org1.add_child org4
-    org5.add_child org6
-
-    elements = [ org1, org2, org6 ]
-
-    result = elements.deflate_json!
-    
-    binding.pry
-
-    #expect(false).to eq(true)
+    include_context 'deflate validations'
+    context 'with j_path' do
+      let(:test_settings) { { mode: :j_path } }
+      it_behaves_like 'valid deflate'
+    end
+    context 'with static_reference' do
+      let(:test_settings) { { mode: :static_reference } }
+      it_behaves_like 'valid deflate'
+    end
   end
+
 end
