@@ -4,7 +4,7 @@ module Json
 
       # Modules
       module Keys
-        Current = :current
+        Current = :current_deflator_manager
       end
 
       module ClassMethods
