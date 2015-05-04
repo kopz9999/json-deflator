@@ -6,26 +6,26 @@ module Json
       #   - :except = array of keys to exclude from object attributes
       #   - :only = array of keys to include from object attributes
       #   - :settings = 
-      #     - instance of class Json::Deflator::Settings
+      #     - hash parameters for settings
       def deflate_json!(opts = {})
         if ObjectManager.current_instance.nil?
           # this means that there's no current iteration
           result = Thread.new do
             ObjectManager.current_instance = 
               ObjectManager.new( settings: opts.delete(:settings) )
-            self.evaluate! opts
+            self.evaluate_deflate! opts
           end
           result.join
           result.value
         else
           # Keep iterating
-          self.evaluate! opts
+          self.evaluate_deflate! opts
         end
       end
 
       protected
 
-      def evaluate!( opts = {})
+      def evaluate_deflate!( opts = {})
         case ObjectManager.current_instance.settings.mode
           when Json::Deflator::Modes::JPath
             return evaluate_deflate_jpath!( opts )
@@ -95,7 +95,7 @@ module Json
         reference_id = opts[:object_id].nil? ? 
           self.object_id : opts.delete(:object_id)
         reference = ObjectManager.current_instance.reference_tracker[ reference_id ]
-        if reference.blank?
+        if reference.nil?
           return yield( reference_id )
         else
           return { Json::Deflator::Identities::Reference => reference }

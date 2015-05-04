@@ -40,3 +40,37 @@ def array_with_circular_objects_a
 
   [ org1, org2, org6 ]
 end
+
+def array_with_circular_objects_b
+  screw = Product.new.tap do |obj|
+    obj.name = 'Screw'
+    obj.price = 0.50
+  end
+
+  hammer = Product.new.tap do |obj|
+    obj.name = 'Hammer'
+    obj.price = 10
+  end
+
+  cooper = Material.new.tap do |obj|
+    obj.name = 'Cooper'
+    obj.weight = 324
+    obj.cost = 45
+  end
+
+  wood = Material.new.tap do |obj|
+    obj.name = 'Wood'
+    obj.weight = 150
+    obj.cost = 20
+  end
+
+  screw.add_material cooper
+
+  hammer.add_material wood
+  hammer.add_material cooper
+
+  [ screw, hammer ]
+
+end
+
+

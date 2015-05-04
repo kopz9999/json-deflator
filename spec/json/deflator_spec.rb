@@ -6,7 +6,7 @@ describe Json::Deflator do
     shared_examples 'valid deflate' do
       specify 'has no exception' do
         expect{
-          test_sample.deflate_json!(settings: test_settings)
+          result = test_sample.deflate_json!(settings: test_settings)
         }.not_to raise_error        
       end
     end
@@ -30,6 +30,20 @@ describe Json::Deflator do
 
   describe 'object sample' do
     let(:test_sample) { array_with_circular_objects_a }
+
+    include_context 'deflate validations'
+    context 'with j_path' do
+      let(:test_settings) { { mode: :j_path } }
+      it_behaves_like 'valid deflate'
+    end
+    context 'with static_reference' do
+      let(:test_settings) { { mode: :static_reference } }
+      it_behaves_like 'valid deflate'
+    end
+  end
+
+  describe 'object sample 2' do
+    let(:test_sample) { array_with_circular_objects_b }
 
     include_context 'deflate validations'
     context 'with j_path' do
