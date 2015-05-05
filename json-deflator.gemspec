@@ -31,4 +31,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'pry-byebug'
   spec.add_development_dependency 'activesupport'
   spec.add_development_dependency 'activemodel'
+  spec.add_development_dependency 'oj'
 end

@@ -81,11 +81,10 @@ def spec_folder
   File.dirname(__FILE__)
 end
 
-def array_with_circular_hashes_b
+def array_with_circular_objects_c
   path = 'recycled/sample3.json'
-  File.read("#{ fixtures_folder }/#{ path }")
-  recycled_hash = JSON
-    .parse read_fixture( path ), :max_nesting => 3000
+  json_str = File.read("#{ fixtures_folder }/#{ path }")
+  recycled_hash = JSON.parse(json_str, :max_nesting => 3000)
   result = recycled_hash.inflate_json! settings: {
     mode: :static_reference,
     preserve_arrays: true

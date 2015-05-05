@@ -1,4 +1,6 @@
 require 'spec_helper'
+require 'oj'
+require 'benchmark'
 
 describe Json::Deflator do
 
@@ -24,6 +26,55 @@ describe Json::Deflator do
         expect( second_decycled_string )
           .to eq decycled_string
       end
+    end
+    # Units are milliseconds, please provide milliseconds
+    shared_examples 'performance check' do | your_test, m_min_time, m_max_time |
+      # Unit transform
+      min_time = m_min_time / 1000.0
+      max_time = m_max_time / 1000.0
+
+      specify "#{your_test} takes between #{m_min_time} and #{m_max_time} ms" do
+        expect( time ).to be_between(min_time, max_time), 
+          "#{ time * 1000 } ms not in range( #{ m_min_time }, #{ m_max_time } ) ms"
+      end
+    end
+    shared_examples 'deflate algorithm performance' do |mode, 
+                                                          m_min_time, m_max_time|
+      let(:time) {
+        sample = test_sample
+        Benchmark.realtime do
+          result = sample.deflate_json!(settings: test_settings)
+        end
+      }
+      
+      it_behaves_like 'performance check', "deflate - #{ mode }", 
+        m_min_time, m_max_time
+    end
+    shared_examples 'deflate w/json generate performance' do |mode, 
+                                                            m_min_time, m_max_time|
+      let(:time) {
+        sample = test_sample
+        Benchmark.realtime do
+          result = sample.deflate_json!(settings: test_settings)
+          JSON.generate result, max_nesting: false
+        end
+      }
+
+      it_behaves_like 'performance check', "deflate - #{ mode } with json parse", 
+        m_min_time, m_max_time
+    end
+    shared_examples 'deflate w/oj generate performance' do |mode, 
+                                                          m_min_time, m_max_time|
+      let(:time) {
+        sample = test_sample
+        Benchmark.realtime do
+          result = sample.deflate_json!(settings: test_settings)
+          Oj.dump result
+        end
+      }
+
+      it_behaves_like 'performance check', "deflate - #{ mode } with oj parse", 
+        m_min_time, m_max_time
     end
   end
 
@@ -72,6 +123,34 @@ describe Json::Deflator do
       let(:test_settings) { { mode: :static_reference } }
       it_behaves_like 'valid deflate'
       it_behaves_like 'integration test'
+    end
+  end
+
+  describe 'object sample 3' do
+    let(:test_sample) { array_with_circular_objects_c }
+
+    include_context 'deflate validations'
+    context 'with j_path' do
+      let(:test_settings) { { mode: :j_path } }
+      it_behaves_like 'valid deflate'
+      it_behaves_like 'integration test'
+      it_behaves_like 'deflate algorithm performance', 
+        :j_path, 550, 920
+      it_behaves_like 'deflate w/json generate performance', 
+        :j_path, 600, 1300
+      it_behaves_like 'deflate w/oj generate performance', 
+        :j_path, 600, 1300
+    end
+    context 'with static_reference' do
+      let(:test_settings) { { mode: :static_reference } }
+      it_behaves_like 'valid deflate'
+      it_behaves_like 'integration test'
+      it_behaves_like 'deflate algorithm performance', 
+        :static_reference, 200, 350
+      it_behaves_like 'deflate w/json generate performance', 
+        :static_reference, 350, 600
+      it_behaves_like 'deflate w/oj generate performance', 
+        :static_reference, 200, 400
     end
   end
 
